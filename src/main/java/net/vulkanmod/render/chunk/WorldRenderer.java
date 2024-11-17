@@ -240,7 +240,7 @@ public class WorldRenderer {
 
             this.renderDistance = this.minecraft.options.getEffectiveRenderDistance();
             if (this.sectionGrid != null) {
-                this.sectionGrid.releaseAllBuffers();
+                this.sectionGrid.freeAllBuffers();
             }
 
             this.taskDispatcher.clearBatchQueue();
@@ -276,7 +276,7 @@ public class WorldRenderer {
             this.allChanged();
         } else {
             if (this.sectionGrid != null) {
-                this.sectionGrid.releaseAllBuffers();
+                this.sectionGrid.freeAllBuffers();
                 this.sectionGrid = null;
             }
 
@@ -350,7 +350,7 @@ public class WorldRenderer {
 
         //Need to reset push constants in case the pipeline will still be used for rendering
         if (!indirectDraw) {
-            VRenderSystem.setChunkOffset(0, 0, 0);
+            VRenderSystem.setModelOffset(0, 0, 0);
             renderer.pushConstants(pipeline);
         }
 
