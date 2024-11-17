@@ -26,7 +26,12 @@ public abstract class Queue {
     private final VkQueue queue;
 
     public synchronized CommandPool.CommandBuffer beginCommands() {
-        return this.commandPool.beginCommands();
+        try (MemoryStack stack = stackPush()) {
+            CommandPool.CommandBuffer commandBuffer = this.commandPool.getCommandBuffer(stack);
+            commandBuffer.begin(stack);
+
+            return commandBuffer;
+        }
     }
 
     Queue(MemoryStack stack, int familyIndex) {
@@ -43,7 +48,9 @@ public abstract class Queue {
     }
 
     public synchronized long submitCommands(CommandPool.CommandBuffer commandBuffer) {
-        return this.commandPool.submitCommands(commandBuffer, queue);
+        try (MemoryStack stack = stackPush()) {
+            return commandBuffer.submitCommands(stack, queue, false);
+        }
     }
 
     public VkQueue queue() {
@@ -57,6 +64,10 @@ public abstract class Queue {
 
     public void waitIdle() {
         vkQueueWaitIdle(queue);
+    }
+
+    public CommandPool getCommandPool() {
+        return commandPool;
     }
 
     public enum Family {
@@ -76,7 +87,6 @@ public abstract class Queue {
     }
 
     public static QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device) {
-
         QueueFamilyIndices indices = new QueueFamilyIndices();
 
         try (MemoryStack stack = stackPush()) {

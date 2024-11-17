@@ -75,9 +75,11 @@
     "texture.mip.MipmapGeneratorM",
     "texture.image.MNativeImage",
     "texture.image.NativeImageAccessor",
+    "texture.update.GameRendererM",
+    "texture.update.MLightTexture",
+    "texture.update.MSpriteContents",
+    "texture.update.MTextureManager",
     "texture.MAbstractTexture",
-    "texture.MSpriteContents",
-    "texture.MTextureManager",
     "texture.MTextureUtil",
 
     "util.ScreenshotRecorderM",

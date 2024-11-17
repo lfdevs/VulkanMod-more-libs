@@ -10,6 +10,7 @@ import net.vulkanmod.render.PipelineManager;
 import net.vulkanmod.render.chunk.WorldRenderer;
 import net.vulkanmod.render.chunk.buffer.UploadManager;
 import net.vulkanmod.render.profiling.Profiler;
+import net.vulkanmod.render.texture.ImageUploadHelper;
 import net.vulkanmod.vulkan.device.DeviceManager;
 import net.vulkanmod.vulkan.framebuffer.Framebuffer;
 import net.vulkanmod.vulkan.framebuffer.RenderPass;
@@ -191,6 +192,25 @@ public class Renderer {
         }
     }
 
+    public void preInitFrame() {
+        Profiler p = Profiler.getMainProfiler();
+        p.pop();
+        p.round();
+        p.push("Frame_ops");
+
+        // runTick might be called recursively,
+        // this check forces sync to avoid upload corruption
+        if (lastReset == currentFrame) {
+            Synchronization.INSTANCE.waitFences();
+        }
+        lastReset = currentFrame;
+
+        drawer.resetBuffers(currentFrame);
+
+        WorldRenderer.getInstance().uploadSections();
+        UploadManager.INSTANCE.submitUploads();
+    }
+
     public void beginFrame() {
         Profiler p = Profiler.getMainProfiler();
         p.pop();
@@ -278,6 +298,11 @@ public class Renderer {
 
         mainPass.end(currentCmdBuffer);
 
+        // Make sure there are no uploads/transitions scheduled
+        ImageUploadHelper.INSTANCE.submitCommands();
+        Synchronization.INSTANCE.waitFences();
+        Vulkan.getStagingBuffer().reset();
+
         submitFrame();
         recordingCmds = false;
 
@@ -298,14 +323,10 @@ public class Renderer {
             submitInfo.waitSemaphoreCount(1);
             submitInfo.pWaitSemaphores(stack.longs(imageAvailableSemaphores.get(currentFrame)));
             submitInfo.pWaitDstStageMask(stack.ints(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT));
-
             submitInfo.pSignalSemaphores(stack.longs(renderFinishedSemaphores.get(currentFrame)));
-
             submitInfo.pCommandBuffers(stack.pointers(currentCmdBuffer));
 
             vkResetFences(device, inFlightFences.get(currentFrame));
-
-            Synchronization.INSTANCE.waitFences();
 
             if ((vkResult = vkQueueSubmit(DeviceManager.getGraphicsQueue().queue(), submitInfo, inFlightFences.get(currentFrame))) != VK_SUCCESS) {
                 vkResetFences(device, inFlightFences.get(currentFrame));
@@ -401,27 +422,6 @@ public class Renderer {
             this.boundFramebuffer = framebuffer;
         }
         return true;
-    }
-
-    public void preInitFrame() {
-        Profiler p = Profiler.getMainProfiler();
-        p.pop();
-        p.round();
-        p.push("Frame_ops");
-
-        // runTick might be called recursively,
-        // this check forces sync to avoid upload corruption
-        if (lastReset == currentFrame) {
-            Synchronization.INSTANCE.waitFences();
-        }
-        lastReset = currentFrame;
-
-        drawer.resetBuffers(currentFrame);
-
-        Vulkan.getStagingBuffer().reset();
-
-        WorldRenderer.getInstance().uploadSections();
-        UploadManager.INSTANCE.submitUploads();
     }
 
     public void addUsedPipeline(Pipeline pipeline) {
