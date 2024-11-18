@@ -168,7 +168,7 @@ public class CloudRenderer {
 
         BufferBuilder bufferBuilder = tesselator.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
 
-        int renderDistance = 45;
+        int renderDistance = 32;
         boolean insideClouds = this.prevInsideClouds;
 
         if (this.prevCloudsType == CloudStatus.FANCY) {
