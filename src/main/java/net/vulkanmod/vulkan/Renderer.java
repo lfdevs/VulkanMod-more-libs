@@ -14,6 +14,7 @@ import net.vulkanmod.render.texture.ImageUploadHelper;
 import net.vulkanmod.vulkan.device.DeviceManager;
 import net.vulkanmod.vulkan.framebuffer.Framebuffer;
 import net.vulkanmod.vulkan.framebuffer.RenderPass;
+import net.vulkanmod.vulkan.framebuffer.SwapChain;
 import net.vulkanmod.vulkan.memory.MemoryManager;
 import net.vulkanmod.vulkan.pass.DefaultMainPass;
 import net.vulkanmod.vulkan.pass.MainPass;
@@ -80,8 +81,9 @@ public class Renderer {
 
     private Drawer drawer;
 
+    private SwapChain swapChain;
+
     private int framesNum;
-    private int imagesNum;
     private List<VkCommandBuffer> commandBuffers;
     private ArrayList<Long> imageAvailableSemaphores;
     private ArrayList<Long> renderFinishedSemaphores;
@@ -96,14 +98,13 @@ public class Renderer {
     private VkCommandBuffer currentCmdBuffer;
     private boolean recordingCmds = false;
 
-    MainPass mainPass = DefaultMainPass.create();
+    MainPass mainPass;
 
     private final List<Runnable> onResizeCallbacks = new ObjectArrayList<>();
 
     public Renderer() {
         device = Vulkan.getVkDevice();
         framesNum = Initializer.CONFIG.frameQueueSize;
-        imagesNum = getSwapChain().getImagesNum();
     }
 
     public static void setLineWidth(float width) {
@@ -116,6 +117,9 @@ public class Renderer {
     private void init() {
         MemoryManager.createInstance(Renderer.getFramesNum());
         Vulkan.createStagingBuffers();
+
+        swapChain = new SwapChain();
+        mainPass = DefaultMainPass.create();
 
         drawer = new Drawer();
         drawer.createResources(framesNum);
@@ -250,7 +254,7 @@ public class Renderer {
 
             IntBuffer pImageIndex = stack.mallocInt(1);
 
-            int vkResult = vkAcquireNextImageKHR(device, Vulkan.getSwapChain().getId(), VUtil.UINT64_MAX,
+            int vkResult = vkAcquireNextImageKHR(device, swapChain.getId(), VUtil.UINT64_MAX,
                     imageAvailableSemaphores.get(currentFrame), VK_NULL_HANDLE, pImageIndex);
 
             if (vkResult == VK_SUBOPTIMAL_KHR || vkResult == VK_ERROR_OUT_OF_DATE_KHR || swapChainUpdate) {
@@ -339,7 +343,7 @@ public class Renderer {
             presentInfo.pWaitSemaphores(stack.longs(renderFinishedSemaphores.get(currentFrame)));
 
             presentInfo.swapchainCount(1);
-            presentInfo.pSwapchains(stack.longs(Vulkan.getSwapChain().getId()));
+            presentInfo.pSwapchains(stack.longs(swapChain.getId()));
 
             presentInfo.pImageIndices(stack.ints(imageIndex));
 
@@ -465,18 +469,18 @@ public class Renderer {
 
         commandBuffers.forEach(commandBuffer -> vkResetCommandBuffer(commandBuffer, 0));
 
-        Vulkan.getSwapChain().recreate();
+        swapChain.recreate();
 
         //Semaphores need to be recreated in order to make them unsignaled
         destroySyncObjects();
 
         int newFramesNum = Initializer.CONFIG.frameQueueSize;
-        imagesNum = getSwapChain().getImagesNum();
 
         if (framesNum != newFramesNum) {
             UploadManager.INSTANCE.submitUploads();
 
             framesNum = newFramesNum;
+            MemoryManager.getInstance().freeAllBuffers();
             MemoryManager.createInstance(newFramesNum);
             createStagingBuffers();
             allocateCommandBuffers();
@@ -495,9 +499,12 @@ public class Renderer {
     }
 
     public void cleanUpResources() {
+        WorldRenderer.getInstance().cleanUp();
         destroySyncObjects();
 
         drawer.cleanUpResources();
+        mainPass.cleanUp();
+        swapChain.cleanUp();
 
         PipelineManager.destroyPipelines();
         VTextureSelector.getWhiteTexture().free();
@@ -509,26 +516,6 @@ public class Renderer {
             vkDestroySemaphore(device, imageAvailableSemaphores.get(i), null);
             vkDestroySemaphore(device, renderFinishedSemaphores.get(i), null);
         }
-    }
-
-    public void setBoundFramebuffer(Framebuffer framebuffer) {
-        this.boundFramebuffer = framebuffer;
-    }
-
-    public void setBoundRenderPass(RenderPass boundRenderPass) {
-        this.boundRenderPass = boundRenderPass;
-    }
-
-    public RenderPass getBoundRenderPass() {
-        return boundRenderPass;
-    }
-
-    public void setMainPass(MainPass mainPass) {
-        this.mainPass = mainPass;
-    }
-
-    public MainPass getMainPass() {
-        return this.mainPass;
     }
 
     public void addOnResizeCallback(Runnable runnable) {
@@ -573,6 +560,30 @@ public class Renderer {
 
     public Pipeline getBoundPipeline() {
         return boundPipeline;
+    }
+
+    public void setBoundFramebuffer(Framebuffer framebuffer) {
+        this.boundFramebuffer = framebuffer;
+    }
+
+    public void setBoundRenderPass(RenderPass boundRenderPass) {
+        this.boundRenderPass = boundRenderPass;
+    }
+
+    public RenderPass getBoundRenderPass() {
+        return boundRenderPass;
+    }
+
+    public void setMainPass(MainPass mainPass) {
+        this.mainPass = mainPass;
+    }
+
+    public MainPass getMainPass() {
+        return this.mainPass;
+    }
+
+    public SwapChain getSwapChain() {
+        return swapChain;
     }
 
     private static void resetDynamicState(VkCommandBuffer commandBuffer) {
@@ -681,8 +692,8 @@ public class Renderer {
 
     public static void resetViewport() {
         try (MemoryStack stack = stackPush()) {
-            int width = getSwapChain().getWidth();
-            int height = getSwapChain().getHeight();
+            int width = INSTANCE.getSwapChain().getWidth();
+            int height = INSTANCE.getSwapChain().getHeight();
 
             VkViewport.Buffer viewport = VkViewport.malloc(1, stack);
             viewport.x(0.0f);

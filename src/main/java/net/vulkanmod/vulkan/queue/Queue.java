@@ -18,12 +18,12 @@ import static org.lwjgl.vulkan.KHRSurface.vkGetPhysicalDeviceSurfaceSupportKHR;
 import static org.lwjgl.vulkan.VK10.*;
 
 public abstract class Queue {
-    private static VkDevice DEVICE;
-
+    private static VkDevice device;
     private static QueueFamilyIndices queueFamilyIndices;
-    protected CommandPool commandPool;
 
     private final VkQueue queue;
+
+    protected CommandPool commandPool;
 
     public synchronized CommandPool.CommandBuffer beginCommands() {
         try (MemoryStack stack = stackPush()) {
@@ -77,11 +77,11 @@ public abstract class Queue {
     }
 
     public static QueueFamilyIndices getQueueFamilies() {
-        if (DEVICE == null)
-            DEVICE = Vulkan.getVkDevice();
+        if (device == null)
+            device = Vulkan.getVkDevice();
 
         if (queueFamilyIndices == null) {
-            queueFamilyIndices = findQueueFamilies(DEVICE.getPhysicalDevice());
+            queueFamilyIndices = findQueueFamilies(device.getPhysicalDevice());
         }
         return queueFamilyIndices;
     }

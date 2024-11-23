@@ -115,7 +115,7 @@ public class AreaBuffer {
         int oldSize = this.size;
 
         int minIncrement = this.size >> 3;
-        minIncrement = Util.align(minIncrement, this.elementSize);
+        minIncrement = (int) Util.align(minIncrement, this.elementSize);
 
         int increment = Math.max(minIncrement, uploadSize << 1);
 
@@ -132,7 +132,7 @@ public class AreaBuffer {
         // TODO: moving only used segments causes corruption
 //        moveUsedSegments(dst);
 
-        this.buffer.freeBuffer();
+        this.buffer.scheduleFree();
         this.buffer = dst;
 
         if (last.isFree()) {
@@ -267,7 +267,7 @@ public class AreaBuffer {
     }
 
     public void freeBuffer() {
-        this.buffer.freeBuffer();
+        this.buffer.scheduleFree();
     }
 
     public int fragmentation() {

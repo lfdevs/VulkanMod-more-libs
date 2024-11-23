@@ -90,6 +90,7 @@ public class CommandPool {
     public void cleanUp() {
         for (CommandBuffer commandBuffer : commandBuffers) {
             vkDestroyFence(Vulkan.getVkDevice(), commandBuffer.fence, null);
+            vkDestroySemaphore(Vulkan.getVkDevice(), commandBuffer.semaphore, null);
         }
         vkResetCommandPool(Vulkan.getVkDevice(), id, VK_COMMAND_POOL_RESET_RELEASE_RESOURCES_BIT);
         vkDestroyCommandPool(Vulkan.getVkDevice(), id, null);

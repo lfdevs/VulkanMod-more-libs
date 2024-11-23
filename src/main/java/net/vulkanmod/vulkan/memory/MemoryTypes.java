@@ -3,6 +3,7 @@ package net.vulkanmod.vulkan.memory;
 import net.vulkanmod.vulkan.Vulkan;
 import net.vulkanmod.vulkan.device.DeviceManager;
 import net.vulkanmod.vulkan.util.VUtil;
+import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.VkMemoryHeap;
 import org.lwjgl.vulkan.VkMemoryType;
 
@@ -62,7 +63,7 @@ public class MemoryTypes {
         }
 
         @Override
-        void createBuffer(Buffer buffer, int size) {
+        void createBuffer(Buffer buffer, long size) {
             MemoryManager.getInstance().createBuffer(buffer, size,
                     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | buffer.usage,
                     VK_MEMORY_HEAP_DEVICE_LOCAL_BIT);
@@ -102,13 +103,14 @@ public class MemoryTypes {
         }
 
         @Override
-        void copyToBuffer(Buffer buffer, long bufferSize, ByteBuffer byteBuffer) {
-            VUtil.memcpy(byteBuffer, buffer.data.getByteBuffer(0, (int) buffer.bufferSize), (int) bufferSize, buffer.getUsedBytes());
+        void copyToBuffer(Buffer buffer, long size, ByteBuffer byteBuffer) {
+            VUtil.memcpy(byteBuffer, buffer, size);
         }
 
         @Override
-        void copyFromBuffer(Buffer buffer, long bufferSize, ByteBuffer byteBuffer) {
-            VUtil.memcpy(buffer.data.getByteBuffer(0, (int) buffer.bufferSize), byteBuffer, 0);
+        void copyFromBuffer(Buffer buffer, long size, ByteBuffer byteBuffer) {
+            MemoryUtil.memCopy(buffer.getDataPtr(), MemoryUtil.memAddress(byteBuffer), size);
+            VUtil.memcpy(buffer, byteBuffer, size);
         }
 
         @Override
@@ -124,23 +126,13 @@ public class MemoryTypes {
         }
 
         @Override
-        void createBuffer(Buffer buffer, int size) {
+        void createBuffer(Buffer buffer, long size) {
 
             MemoryManager.getInstance().createBuffer(buffer, size,
                     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | buffer.usage,
                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_CACHED_BIT);
         }
 
-        void copyToBuffer(Buffer buffer, long dstOffset, long bufferSize, ByteBuffer byteBuffer) {
-            VUtil.memcpy(byteBuffer, buffer.data.getByteBuffer((int) 0, (int) buffer.bufferSize), (int) bufferSize, dstOffset);
-        }
-
-        void copyBuffer(Buffer src, Buffer dst) {
-            VUtil.memcpy(src.data.getByteBuffer(0, src.bufferSize),
-                    dst.data.getByteBuffer(0, dst.bufferSize), src.bufferSize, 0);
-
-//            copyBufferCmd(src.getId(), 0, dst.getId(), 0, src.bufferSize);
-        }
     }
 
     static class HostLocalFallbackMemory extends MappableMemory {
@@ -150,7 +142,7 @@ public class MemoryTypes {
         }
 
         @Override
-        void createBuffer(Buffer buffer, int size) {
+        void createBuffer(Buffer buffer, long size) {
             MemoryManager.getInstance().createBuffer(buffer, size,
                     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | buffer.usage,
                     VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
@@ -164,7 +156,7 @@ public class MemoryTypes {
         }
 
         @Override
-        void createBuffer(Buffer buffer, int size) {
+        void createBuffer(Buffer buffer, long size) {
             MemoryManager.getInstance().createBuffer(buffer, size,
                     VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | buffer.usage,
                     VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
