@@ -3,7 +3,6 @@ package net.vulkanmod.mixin.render.clouds;
 import com.mojang.blaze3d.vertex.*;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.*;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.vulkanmod.render.profiling.Profiler;
 import net.vulkanmod.render.sky.CloudRenderer;
@@ -37,7 +36,7 @@ public abstract class LevelRendererM {
     @Inject(method = "allChanged", at = @At("RETURN"))
     private void onAllChanged(CallbackInfo ci) {
         if (this.cloudRenderer != null) {
-            this.cloudRenderer.reset();
+            this.cloudRenderer.resetBuffer();
         }
     }
 
