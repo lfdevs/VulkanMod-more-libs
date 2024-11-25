@@ -51,17 +51,15 @@ public class MLightTexture {
         RenderSystem.setShaderTexture(2, this.lightTexture.getId());
     }
 
-    /**
-     * @author
-     * @reason
-     */
     @SuppressWarnings("UnreachableCode")
-    @Overwrite
-    public void updateLightTexture(float partialTicks) {
+    @Inject(method = "updateLightTexture", at = @At("HEAD"), cancellable = true)
+    public void updateLightTexture(float partialTicks, CallbackInfo ci) {
         if (this.updateLightTexture) {
             this.updateLightTexture = false;
 
             this.minecraft.getProfiler().push("lightTex");
+
+            // TODO: Other mods might be changing lightmap behaviour, we can't be aware of that here
 
             ClientLevel clientLevel = this.minecraft.level;
             if (clientLevel != null) {
@@ -169,6 +167,8 @@ public class MLightTexture {
                 this.minecraft.getProfiler().pop();
             }
         }
+
+        ci.cancel();
     }
 
     @Unique
