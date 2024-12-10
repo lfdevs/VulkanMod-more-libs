@@ -1,4 +1,4 @@
-package net.vulkanmod.vulkan.shader.parser;
+package net.vulkanmod.vulkan.shader.converter;
 
 import net.vulkanmod.vulkan.shader.descriptor.ImageDescriptor;
 import net.vulkanmod.vulkan.shader.descriptor.UBO;
@@ -37,6 +37,7 @@ public class GlslConverter {
         fshOut.insert(0, samplersFragCode);
 
         vshOut.insert(0, "#version 450\n\n");
+        fshOut.insert(0, "#define sample sample1\n");
         fshOut.insert(0, "#version 450\n\n");
 
         this.vshConverted = vshOut.toString();

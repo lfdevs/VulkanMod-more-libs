@@ -1,4 +1,4 @@
-package net.vulkanmod.vulkan.shader.parser;
+package net.vulkanmod.vulkan.shader.converter;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import net.vulkanmod.vulkan.shader.descriptor.ImageDescriptor;

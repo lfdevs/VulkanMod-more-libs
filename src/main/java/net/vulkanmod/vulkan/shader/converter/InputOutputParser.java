@@ -1,4 +1,4 @@
-package net.vulkanmod.vulkan.shader.parser;
+package net.vulkanmod.vulkan.shader.converter;
 
 import com.mojang.blaze3d.vertex.VertexFormat;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
@@ -6,7 +6,7 @@ import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static net.vulkanmod.vulkan.shader.parser.UniformParser.removeSemicolon;
+import static net.vulkanmod.vulkan.shader.converter.UniformParser.removeSemicolon;
 
 public class InputOutputParser {
     private final GlslConverter converterInstance;
