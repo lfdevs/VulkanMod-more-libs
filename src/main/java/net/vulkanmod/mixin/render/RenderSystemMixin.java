@@ -147,14 +147,6 @@ public abstract class RenderSystemMixin {
      * @author
      */
     @Overwrite(remap = false)
-    public static void viewport(int x, int y, int width, int height) {
-        Renderer.setViewport(x, y, width, height);
-    }
-
-    /**
-     * @author
-     */
-    @Overwrite(remap = false)
     public static void enableScissor(int x, int y, int width, int height) {
         Renderer.setScissor(x, y, width, height);
     }

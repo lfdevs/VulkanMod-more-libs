@@ -1,5 +1,6 @@
 package net.vulkanmod.vulkan;
 
+import com.mojang.blaze3d.platform.GlStateManager;
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.minecraft.client.Minecraft;
@@ -398,7 +399,7 @@ public class Renderer {
     }
 
     public void endRenderPass(VkCommandBuffer commandBuffer) {
-        if (skipRendering || this.boundFramebuffer == null)
+        if (skipRendering || !recordingCmds || this.boundFramebuffer == null)
             return;
 
         if (!DYNAMIC_RENDERING)
@@ -468,6 +469,7 @@ public class Renderer {
         Vulkan.waitIdle();
 
         commandBuffers.forEach(commandBuffer -> vkResetCommandBuffer(commandBuffer, 0));
+        recordingCmds = false;
 
         swapChain.recreate();
 
@@ -666,7 +668,18 @@ public class Renderer {
     }
 
     public static void setInvertedViewport(int x, int y, int width, int height) {
-        setViewport(x, y + height, width, -height);
+        setViewportState(x, y + height, width, -height);
+    }
+
+    public static void resetViewport() {
+        int width = INSTANCE.getSwapChain().getWidth();
+        int height = INSTANCE.getSwapChain().getHeight();
+
+        setViewportState(0, 0, width, height);
+    }
+
+    public static void setViewportState(int x, int y, int width, int height) {
+        GlStateManager._viewport(x, y, width, height);
     }
 
     public static void setViewport(int x, int y, int width, int height) {
@@ -688,23 +701,6 @@ public class Renderer {
         viewport.maxDepth(1.0f);
 
         vkCmdSetViewport(INSTANCE.currentCmdBuffer, 0, viewport);
-    }
-
-    public static void resetViewport() {
-        try (MemoryStack stack = stackPush()) {
-            int width = INSTANCE.getSwapChain().getWidth();
-            int height = INSTANCE.getSwapChain().getHeight();
-
-            VkViewport.Buffer viewport = VkViewport.malloc(1, stack);
-            viewport.x(0.0f);
-            viewport.y(height);
-            viewport.width(width);
-            viewport.height(-height);
-            viewport.minDepth(0.0f);
-            viewport.maxDepth(1.0f);
-
-            vkCmdSetViewport(INSTANCE.currentCmdBuffer, 0, viewport);
-        }
     }
 
     public static void setScissor(int x, int y, int width, int height) {

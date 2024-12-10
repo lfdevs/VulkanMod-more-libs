@@ -9,10 +9,11 @@ import net.vulkanmod.gl.GlTexture;
 import net.vulkanmod.vulkan.Renderer;
 import net.vulkanmod.vulkan.VRenderSystem;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.opengl.GL20;
 import org.lwjgl.system.MemoryUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Overwrite;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Redirect;
 
 import java.nio.ByteBuffer;
 import java.nio.IntBuffer;
@@ -99,8 +100,8 @@ public class GlStateManagerM {
     /**
      * @author
      */
-    @Overwrite(remap = false)
-    public static void _viewport(int x, int y, int width, int height) {
+    @Redirect(method = "_viewport", at = @At(value = "INVOKE", target = "Lorg/lwjgl/opengl/GL11;glViewport(IIII)V"), remap = false)
+    private static void _viewport(int x, int y, int width, int height) {
         Renderer.setViewport(x, y, width, height);
     }
 
