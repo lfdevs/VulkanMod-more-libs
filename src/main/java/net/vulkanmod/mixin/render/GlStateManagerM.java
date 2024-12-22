@@ -127,6 +127,7 @@ public class GlStateManagerM {
      */
     @Overwrite(remap = false)
     public static void _texImage2D(int target, int level, int internalFormat, int width, int height, int border, int format, int type, @Nullable IntBuffer pixels) {
+        RenderSystem.assertOnRenderThreadOrInit();
         GlTexture.texImage2D(target, level, internalFormat, width, height, border, format, type, pixels != null ? MemoryUtil.memByteBuffer(pixels) : null);
     }
 
@@ -135,7 +136,8 @@ public class GlStateManagerM {
      */
     @Overwrite(remap = false)
     public static void _texSubImage2D(int target, int level, int offsetX, int offsetY, int width, int height, int format, int type, long pixels) {
-
+        RenderSystem.assertOnRenderThreadOrInit();
+        GlTexture.texSubImage2D(target, level, offsetX, offsetY, width, height, format, type, pixels);
     }
 
     /**

@@ -197,6 +197,15 @@ public class GL11M {
      * @reason
      */
     @Overwrite(remap = false)
+    public static void glPixelStorei(@NativeType("GLenum") int pname, @NativeType("GLint") int param) {
+        GlTexture.pixelStoreI(pname, param);
+    }
+
+    /**
+     * @author
+     * @reason
+     */
+    @Overwrite(remap = false)
     public static void glEnable(@NativeType("GLenum") int target) {
 
     }
@@ -276,6 +285,15 @@ public class GL11M {
      */
     @Overwrite(remap = false)
     public static void glCopyTexSubImage2D(@NativeType("GLenum") int target, @NativeType("GLint") int level, @NativeType("GLint") int xoffset, @NativeType("GLint") int yoffset, @NativeType("GLint") int x, @NativeType("GLint") int y, @NativeType("GLsizei") int width, @NativeType("GLsizei") int height) {
+        // TODO
+    }
+
+    /**
+     * @author
+     * @reason
+     */
+    @Overwrite(remap = false)
+    public static void glBlendFunc(@NativeType("GLenum") int sfactor, @NativeType("GLenum") int dfactor) {
         // TODO
     }
 }
