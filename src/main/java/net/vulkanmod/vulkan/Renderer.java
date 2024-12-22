@@ -182,8 +182,8 @@ public class Renderer {
             for (int i = 0; i < framesNum; i++) {
 
                 if (vkCreateSemaphore(device, semaphoreInfo, null, pImageAvailableSemaphore) != VK_SUCCESS
-                        || vkCreateSemaphore(device, semaphoreInfo, null, pRenderFinishedSemaphore) != VK_SUCCESS
-                        || vkCreateFence(device, fenceInfo, null, pFence) != VK_SUCCESS) {
+                    || vkCreateSemaphore(device, semaphoreInfo, null, pRenderFinishedSemaphore) != VK_SUCCESS
+                    || vkCreateFence(device, fenceInfo, null, pFence) != VK_SUCCESS) {
 
                     throw new RuntimeException("Failed to create synchronization objects for the frame: " + i);
                 }
@@ -206,7 +206,7 @@ public class Renderer {
         // runTick might be called recursively,
         // this check forces sync to avoid upload corruption
         if (lastReset == currentFrame) {
-            Synchronization.INSTANCE.waitFences();
+            waitFences();
         }
         lastReset = currentFrame;
 
@@ -256,7 +256,7 @@ public class Renderer {
             IntBuffer pImageIndex = stack.mallocInt(1);
 
             int vkResult = vkAcquireNextImageKHR(device, swapChain.getId(), VUtil.UINT64_MAX,
-                    imageAvailableSemaphores.get(currentFrame), VK_NULL_HANDLE, pImageIndex);
+                                                 imageAvailableSemaphores.get(currentFrame), VK_NULL_HANDLE, pImageIndex);
 
             if (vkResult == VK_SUBOPTIMAL_KHR || vkResult == VK_ERROR_OUT_OF_DATE_KHR || swapChainUpdate) {
                 swapChainUpdate = true;
@@ -303,10 +303,7 @@ public class Renderer {
 
         mainPass.end(currentCmdBuffer);
 
-        // Make sure there are no uploads/transitions scheduled
-        ImageUploadHelper.INSTANCE.submitCommands();
-        Synchronization.INSTANCE.waitFences();
-        Vulkan.getStagingBuffer().reset();
+        waitFences();
 
         submitFrame();
         recordingCmds = false;
@@ -362,7 +359,7 @@ public class Renderer {
     }
 
     /**
-    * Called in case draw results are needed before the of the frame
+     * Called in case draw results are needed before the of the frame
      */
     public void flushCmds() {
         if (!this.recordingCmds)
@@ -381,7 +378,7 @@ public class Renderer {
 
             vkResetFences(device, inFlightFences.get(currentFrame));
 
-            Synchronization.INSTANCE.waitFences();
+            waitFences();
 
             if ((vkResult = vkQueueSubmit(DeviceManager.getGraphicsQueue().queue(), submitInfo, inFlightFences.get(currentFrame))) != VK_SUCCESS) {
                 vkResetFences(device, inFlightFences.get(currentFrame));
@@ -437,6 +434,13 @@ public class Renderer {
         usedPipelines.remove(pipeline);
     }
 
+    private void waitFences() {
+        // Make sure there are no uploads/transitions scheduled
+        ImageUploadHelper.INSTANCE.submitCommands();
+        Synchronization.INSTANCE.waitFences();
+        Vulkan.getStagingBuffer().reset();
+    }
+
     private void resetDescriptors() {
         for (Pipeline pipeline : usedPipelines) {
             pipeline.resetDescriptorPool(currentFrame);
@@ -454,9 +458,9 @@ public class Renderer {
         try (MemoryStack stack = MemoryStack.stackPush()) {
             //Empty Submit
             VkSubmitInfo info = VkSubmitInfo.calloc(stack)
-                    .sType$Default()
-                    .pWaitSemaphores(stack.longs(imageAvailableSemaphores.get(currentFrame)))
-                    .pWaitDstStageMask(stack.ints(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT));
+                                            .sType$Default()
+                                            .pWaitSemaphores(stack.longs(imageAvailableSemaphores.get(currentFrame)))
+                                            .pWaitDstStageMask(stack.ints(VK_PIPELINE_STAGE_ALL_COMMANDS_BIT));
 
             vkQueueSubmit(DeviceManager.getGraphicsQueue().queue(), info, inFlightFences.get(currentFrame));
             vkWaitForFences(device, inFlightFences.get(currentFrame), true, -1);
@@ -465,7 +469,7 @@ public class Renderer {
 
     @SuppressWarnings("UnreachableCode")
     private void recreateSwapChain() {
-        Synchronization.INSTANCE.waitFences();
+        waitFences();
         Vulkan.waitIdle();
 
         commandBuffers.forEach(commandBuffer -> vkResetCommandBuffer(commandBuffer, 0));
