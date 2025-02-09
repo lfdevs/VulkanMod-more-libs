@@ -97,7 +97,7 @@ public abstract class ShaderLoadUtil {
             }
 
             if (stream == null) {
-                throw new FileNotFoundException("Config at %s not found".formatted(path));
+                return null;
             }
 
             JsonElement jsonElement = JsonParser.parseReader(new BufferedReader(new InputStreamReader(stream)));
