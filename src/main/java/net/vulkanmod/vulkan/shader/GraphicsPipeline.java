@@ -306,10 +306,20 @@ public class GraphicsPipeline extends Pipeline {
                 }
 
                 case COLOR -> {
-                    posDescription.format(VK_FORMAT_R8G8B8A8_UNORM);
-                    posDescription.offset(offset);
+                    switch (type) {
+                        case UBYTE -> {
+                            posDescription.format(VK_FORMAT_R8G8B8A8_UNORM);
+                            posDescription.offset(offset);
 
-                    offset += 4;
+                            offset += 4;
+                        }
+                        case UINT -> {
+                            posDescription.format(VK_FORMAT_R32_UINT);
+                            posDescription.offset(offset);
+
+                            offset += 4;
+                        }
+                    }
                 }
 
                 case UV -> {
@@ -328,6 +338,12 @@ public class GraphicsPipeline extends Pipeline {
                         }
                         case USHORT -> {
                             posDescription.format(VK_FORMAT_R16G16_UINT);
+                            posDescription.offset(offset);
+
+                            offset += 4;
+                        }
+                        case UINT -> {
+                            posDescription.format(VK_FORMAT_R32_UINT);
                             posDescription.offset(offset);
 
                             offset += 4;
