@@ -1,6 +1,5 @@
 package net.vulkanmod.vulkan.texture;
 
-import com.mojang.blaze3d.platform.NativeImage;
 import net.vulkanmod.render.texture.ImageUploadHelper;
 import net.vulkanmod.vulkan.Renderer;
 import net.vulkanmod.vulkan.Vulkan;
@@ -9,12 +8,12 @@ import net.vulkanmod.vulkan.memory.buffer.StagingBuffer;
 import net.vulkanmod.vulkan.queue.CommandPool;
 import org.lwjgl.PointerBuffer;
 import org.lwjgl.system.MemoryStack;
+import org.lwjgl.system.MemoryUtil;
 import org.lwjgl.vulkan.VkCommandBuffer;
 import org.lwjgl.vulkan.VkDevice;
 import org.lwjgl.vulkan.VkImageMemoryBarrier;
 import org.lwjgl.vulkan.VkImageViewCreateInfo;
 
-import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.LongBuffer;
 import java.util.Arrays;
@@ -29,6 +28,7 @@ public class VulkanImage {
 
     private static final VkDevice DEVICE = Vulkan.getVkDevice();
 
+    public final String name;
     public final int format;
     public final int aspect;
     public final int mipLevels;
@@ -48,11 +48,12 @@ public class VulkanImage {
 
     private int currentLayout;
 
-    //Used for swap chain images
-    public VulkanImage(long id, int format, int mipLevels, int width, int height, int formatSize, int usage, long imageView) {
+    // Used for already allocated images e.g. swap chain images
+    public VulkanImage(String name, long id, int format, int mipLevels, int width, int height, int formatSize, int usage, long imageView) {
         this.id = id;
         this.mainImageView = imageView;
 
+        this.name = name;
         this.mipLevels = mipLevels;
         this.width = width;
         this.height = height;
@@ -67,6 +68,7 @@ public class VulkanImage {
     }
 
     private VulkanImage(Builder builder) {
+        this.name = builder.name;
         this.mipLevels = builder.mipLevels;
         this.width = builder.width;
         this.height = builder.height;
@@ -142,6 +144,10 @@ public class VulkanImage {
             allocation = pAllocation.get(0);
 
             MemoryManager.addImage(this);
+
+            if (this.name != null) {
+                Vulkan.setDebugLabel(stack, VK_OBJECT_TYPE_IMAGE, pTextureImage.get(), this.name);
+            }
         }
     }
 
@@ -443,6 +449,7 @@ public class VulkanImage {
         final int width;
         final int height;
 
+        String name;
         int format = VulkanImage.DefaultFormat;
         int formatSize;
         byte mipLevels = 1;
@@ -457,13 +464,13 @@ public class VulkanImage {
             this.height = height;
         }
 
-        public Builder setFormat(int format) {
-            this.format = format;
+        public Builder setName(String name) {
+            this.name = name;
             return this;
         }
 
-        public Builder setFormat(NativeImage.InternalGlFormat format) {
-            this.format = convertFormat(format);
+        public Builder setFormat(int format) {
+            this.format = format;
             return this;
         }
 
@@ -510,14 +517,6 @@ public class VulkanImage {
             this.formatSize = formatSize(this.format);
 
             return VulkanImage.createTextureImage(this);
-        }
-
-        private static int convertFormat(NativeImage.InternalGlFormat format) {
-            return switch (format) {
-                case RGBA -> VK_FORMAT_R8G8B8A8_UNORM;
-                case RED -> VK_FORMAT_R8_UNORM;
-                default -> throw new IllegalArgumentException(String.format("Unxepcted format: %s", format));
-            };
         }
 
         private static int formatSize(int format) {

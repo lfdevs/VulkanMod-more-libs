@@ -50,6 +50,7 @@ public class MTextureUtil {
                 image.free();
 
             image = new VulkanImage.Builder(width, height)
+                    .setName(String.format("Texture %d", id))
                     .setMipLevels(mipLevels + 1)
                     .setFormat(convertFormat(internalGlFormat))
                     .setLinearFiltering(false)
