@@ -196,7 +196,13 @@ public class VulkanImage {
     }
 
     public void uploadSubTextureAsync(int mipLevel, int width, int height, int xOffset, int yOffset, int unpackSkipRows, int unpackSkipPixels, int unpackRowLength, ByteBuffer buffer) {
-        long uploadSize = buffer.limit();
+        this.uploadSubTextureAsync(mipLevel, width, height,
+                                   xOffset, yOffset, unpackSkipRows, unpackSkipPixels, unpackRowLength,
+                                   MemoryUtil.memAddress(buffer));
+    }
+
+    public void uploadSubTextureAsync(int mipLevel, int width, int height, int xOffset, int yOffset, int unpackSkipRows, int unpackSkipPixels, int unpackRowLength, long srcPtr) {
+        long uploadSize = (long) unpackRowLength * height * this.formatSize;
 
         StagingBuffer stagingBuffer = Vulkan.getStagingBuffer();
 
@@ -207,8 +213,10 @@ public class VulkanImage {
             stagingBuffer.scheduleFree();
         }
 
+        srcPtr += ((long) unpackRowLength * unpackSkipRows + unpackSkipPixels) * this.formatSize;
+
         stagingBuffer.align(this.formatSize);
-        stagingBuffer.copyBuffer((int) uploadSize, buffer);
+        stagingBuffer.copyBuffer((int) uploadSize, srcPtr);
 
         long bufferId = stagingBuffer.getId();
 
@@ -216,13 +224,7 @@ public class VulkanImage {
         try (MemoryStack stack = stackPush()) {
             transferDstLayout(stack, commandBuffer);
 
-            int uploadOffset = (unpackRowLength * unpackSkipRows + unpackSkipPixels) * this.formatSize;
-
-            if (uploadOffset > uploadSize) {
-                throw new BufferOverflowException();
-            }
-
-            final int srcOffset = (int) (stagingBuffer.getOffset() + uploadOffset);
+            final int srcOffset = (int) (stagingBuffer.getOffset());
 
             ImageUtil.copyBufferToImageCmd(stack, commandBuffer, bufferId, this.id, mipLevel, width, height, xOffset, yOffset,
                                            srcOffset, unpackRowLength, height);
