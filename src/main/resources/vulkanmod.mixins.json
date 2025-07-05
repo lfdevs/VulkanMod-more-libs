@@ -7,11 +7,8 @@
   "mixins": [
   ],
   "client": [
-    "window.WindowMixin",
-    "window.WindowAccessor",
-
-    "chunk.ClientPacketListenerM",
     "chunk.ClientChunkCacheM",
+    "chunk.ClientPacketListenerM",
     "chunk.DirectionMixin",
     "chunk.FrustumMixin",
     "chunk.LevelRendererMixin",
@@ -19,26 +16,24 @@
     "chunk.SectionRenderDispatcherM",
     "chunk.ViewAreaM",
     "chunk.VisibilitySetMixin",
-
     "compatibility.EffectInstanceM",
+    "compatibility.PostChainM",
+    "compatibility.PostPassM",
     "compatibility.ProgramM",
     "compatibility.UniformM",
     "compatibility.gl.GL11M",
     "compatibility.gl.GL15M",
     "compatibility.gl.GL30M",
-
-    "debug.crash_report.SystemReportM",
     "debug.DebugScreenOverlayM",
     "debug.GlDebugInfoM",
     "debug.KeyboardHandlerM",
-
+    "debug.crash_report.SystemReportM",
     "matrix.Matrix4fM",
     "matrix.PoseAccessor",
-
+    "profiling.ClientMetricsSamplersProviderMixin",
     "profiling.GuiMixin",
     "profiling.KeyboardHandlerM",
     "profiling.LevelRendererMixin",
-
     "render.BufferUploaderM",
     "render.GameRendererMixin",
     "render.GlProgramManagerMixin",
@@ -69,37 +64,28 @@
     "render.vertex.IndexTypeMixin",
     "render.vertex.VertexBufferM",
     "render.vertex.VertexFormatMixin",
-
-    "screen.ScreenM",
     "screen.OptionsScreenM",
-
-    "texture.mip.MipmapGeneratorM",
+    "screen.ScreenM",
+    "texture.MAbstractTexture",
+    "texture.MTextureUtil",
     "texture.image.MNativeImage",
     "texture.image.NativeImageAccessor",
+    "texture.mip.MipmapGeneratorM",
     "texture.update.GameRendererM",
     "texture.update.MLightTexture",
     "texture.update.MSpriteContents",
     "texture.update.MTextureManager",
-    "texture.MAbstractTexture",
-    "texture.MTextureUtil",
-
     "util.ScreenshotRecorderM",
-
     "vertex.EntityOutlineGeneratorM",
     "vertex.SpriteCoordinateExpanderM",
     "vertex.VertexMultiConsumersM$DoubleM",
     "vertex.VertexMultiConsumersM$MultipleM",
     "vertex.VertexMultiConsumersM$SheetDecalM",
-
+    "voxel.VoxelShapeMixin",
     "wayland.InputConstantsM",
     "wayland.MinecraftMixin",
-
-    "texture.mip.MipmapGeneratorM",
-
-    "compatibility.PostChainM",
-    "compatibility.PostPassM",
-
-    "voxel.VoxelShapeMixin"
+    "window.WindowAccessor",
+    "window.WindowMixin"
   ],
   "injectors": {
     "defaultRequire": 1
