@@ -41,7 +41,10 @@ dependencies {
 project.ext.lwjglVersion = "3.3.3"
 project.ext.jomlVersion = "1.10.4"
 project.ext.winNatives = "natives-windows"
+project.ext.winArm64Natives = "natives-windows-arm64"
 project.ext.linuxNatives = "natives-linux"
+project.ext.linuxArm64Natives = "natives-linux-arm64"
+project.ext.linuxArm32Natives = "natives-linux-arm32"
 project.ext.macosNatives = "natives-macos"
 project.ext.macosArmNatives = "natives-macos-arm64"
 
@@ -51,7 +54,10 @@ dependencies {
 	ext.includeNatives = { name ->
 		include(implementation("$name:$lwjglVersion"))
 		include(runtimeOnly("$name:$lwjglVersion:$winNatives"))
+		include(runtimeOnly("$name:$lwjglVersion:$winArm64Natives"))
 		include(runtimeOnly("$name:$lwjglVersion:$linuxNatives"))
+		include(runtimeOnly("$name:$lwjglVersion:$linuxArm64Natives"))
+		include(runtimeOnly("$name:$lwjglVersion:$linuxArm32Natives"))
 		include(runtimeOnly("$name:$lwjglVersion:$macosNatives"))
 		include(runtimeOnly("$name:$lwjglVersion:$macosArmNatives"))
 	}
